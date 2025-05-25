@@ -1,5 +1,5 @@
 import os
-import openai
+from openai import OpenAI
 import requests
 import re
 import argparse
@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env
 load_dotenv()
 
-openai.api_key = os.getenv('OPENAI_API_KEY')
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 WEATHER_API_KEY = os.getenv('WEATHER_API_KEY')
 
 def get_weather(city):
@@ -32,15 +32,15 @@ def ask_agent(user_input):
 
         Tool call:
         """
-    response = openai.ChatCompletion.create(
-            model="gpt-4",
+    response = client.chat.completions.create(
+            model="gpt-4.1-nano",
             messages=[{"role": "user", "content": prompt}]
     )
 
-    tool_call = response['choices'][0]['message']['content'].strip()
-    print("Tool Call: {tool_call}")
-    match = re.match(r'(\w+)\(".+?)"\)', tool_call)
-    print("match: {match}")
+    tool_call = response.choices[0].message.content.strip()
+    print(f"Tool Call: {tool_call}")
+    match = re.match(r'(\w+)\("(.+?)"\)', tool_call)
+    print(f"match: {match}")
     if match:
         func_name, arg = match.groups()
         if func_name in tools:
